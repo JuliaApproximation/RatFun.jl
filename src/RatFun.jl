@@ -4,7 +4,7 @@ module RatFun
 using Base,Compat,ApproxFun,RecipesBase
 
 import ApproxFun: evaluate, dimension, domain, setdomain, PiecewiseSpace, DiracSpace,
-                    PointSpace, ∞, FunTypes
+                    PointSpace, ∞, FunTypes, components
 import Base: +, -, *, /, getindex, broadcast, //
 
 export RationalFun, inv
@@ -33,7 +33,7 @@ end
 
 Base.inv(r::RationalFun) = RationalFun(r.q,r.p)
 
-Base.vec(r::RationalFun) = RationalFun.(vec(r.p),vec(r.q))
+components(r::RationalFun) = RationalFun.(components(r.p),components(r.q))
 
 broadcast(::typeof(/),r1::RationalFun,r2::RationalFun) = r1.*inv(r2)
 broadcast(::typeof(/),a,r::RationalFun) = a.*inv(r)
@@ -74,8 +74,10 @@ function plotptsvals(r::RationalFun)
         q=pad(q,dimension(space(p))+10qlen+1000)
         p=pad(p,dimension(space(p))+10qlen+1000)
         r = RationalFun(p,q)
-    else
-        p=pad(p,dimension(space(p))+dimension(space(q)))
+    else # both finite dimensional.
+        @assert dimension(space(p)) == dimension(space(q))
+        p=pad(p,dimension(space(p)))
+        q=pad(q,dimension(space(q)))
         r = RationalFun(p,q)
     end
     return points(r.p),values(r.p)./values(r.q)
@@ -92,8 +94,8 @@ end
 
 @recipe function f{S1<:PiecewiseSpace,T1<:Real,S2<:PiecewiseSpace,T2<:Real,V1,V2}(r::RationalFun{Fun{S1,T1,V1},
                                   Fun{S2,T2,V2}})
-    vp = vec(r.p)
-    vq = vec(r.q)
+    vp = components(r.p)
+    vq = components(r.q)
 
     if !isempty(vp)
         @series begin
@@ -111,8 +113,8 @@ end
 end
 
 # For dirac space, we draw a dotted line extending to infinity
-@recipe function f{V1,V2}(r::RationalFun{Fun{<:DiracSpace,<:Real,V1},
-                                  Fun{<:PointSpace,<:Real,V2}})
+@recipe function f{S1<:DiracSpace,T1<:Real,S2<:PointSpace,T2<:Real,V1,V2}(r::RationalFun{Fun{S1,T1,V1},
+                                  Fun{S2,T2,V2}})
     p = r.p
     q = r.q
     pts=space(p).points
@@ -138,8 +140,8 @@ end
 end
 
 # for PointSpace, we draw just a line
-@recipe function f{V1,V2}(r::RationalFun{Fun{<:PointSpace,<:Real,V1},
-                                  Fun{<:PointSpace,<:Real,V2}})
+@recipe function f{S1<:PointSpace,T1<:Real,S2<:PointSpace,T2<:Real,V1,V2}(r::RationalFun{Fun{S1,T1,V1},
+                                  Fun{S2,T2,V2}})
     p = r.p
     q = r.q
     pts=space(p).points
