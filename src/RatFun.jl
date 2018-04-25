@@ -5,7 +5,7 @@ using Base,Compat,ApproxFun,RecipesBase
 
 import ApproxFun: evaluate, dimension, domain, setdomain, PiecewiseSpace, DiracSpace,
                     PointSpace, ∞, FunTypes, components
-import Base: +, -, *, /, getindex, broadcast, //
+import Base: +, -, *, /, getindex, broadcast, //, numerator, denominator
 
 export RationalFun, inv
 
@@ -25,6 +25,8 @@ end
 
 @compat (r::RationalFun)(x) = evaluate(r,x)
 
+numerator(r::RationalFun) = r.p
+denominator(r::RationalFun) = r.q
 
 *(r1::RationalFun,r2::RationalFun) = RationalFun(r1.p*r2.p,r1.q*r2.q)
 *(r::RationalFun,a::Union{Number,Fun}) = RationalFun(r.p*a,r.q)
