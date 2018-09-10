@@ -1,7 +1,5 @@
-__precompile__()
-
 module RatFun
-using Base,Compat,ApproxFun,RecipesBase
+using Base, ApproxFun, RecipesBase
 
 import ApproxFun: evaluate, dimension, domain, setdomain, PiecewiseSpace, DiracSpace,
                     PointSpace, ∞, FunTypes, components
@@ -9,7 +7,7 @@ import Base: +, -, *, /, getindex, broadcast, //, numerator, denominator
 
 export RationalFun, inv
 
-immutable RationalFun{F1<:Fun,F2<:Fun}
+struct RationalFun{F1<:Fun,F2<:Fun}
     p::F1
     q::F2
 end
@@ -23,7 +21,7 @@ function evaluate(r::RationalFun,x)
     (r.p)(x)/(r.q)(x)
 end
 
-@compat (r::RationalFun)(x) = evaluate(r,x)
+(r::RationalFun)(x) = evaluate(r,x)
 
 numerator(r::RationalFun) = r.p
 denominator(r::RationalFun) = r.q
@@ -37,14 +35,14 @@ Base.inv(r::RationalFun) = RationalFun(r.q,r.p)
 
 components(r::RationalFun) = RationalFun.(components(r.p),components(r.q))
 
-broadcast(::typeof(/),r1::RationalFun,r2::RationalFun) = r1.*inv(r2)
-broadcast(::typeof(/),a,r::RationalFun) = a.*inv(r)
+broadcast(::typeof(/), r1::RationalFun, r2::RationalFun) = r1.*inv(r2)
+broadcast(::typeof(/), a, r::RationalFun) = a.*inv(r)
 
 (/)(r1::RationalFun,r2::RationalFun) = r1*inv(r2)
 (/)(a,r::RationalFun) = a*inv(r)
 
 (/)(r::RationalFun,a) = RationalFun(r.p,r.q*a)
-broadcast(::typeof(/),r::RationalFun,a) = (1./a).*r
+broadcast(::typeof(/), r::RationalFun, a) = (1/a).*r
 
 for op = (:+,:-)
   @eval begin
@@ -85,17 +83,17 @@ function plotptsvals(r::RationalFun)
     return points(r.p),values(r.p)./values(r.q)
 end
 
-@recipe function f{S,T<:Real,V1}(g::RationalFun{Fun{S,T,V1}})
+@recipe function f(g::RationalFun{Fun{S,T,V1}}) where {S,T<:Real,V1}
     plotptsvals(g)
 end
 
-@recipe function f{S,T<:Real,V1}(x::AbstractVector{T},g::RationalFun{Fun{S,T,V1}})
+@recipe function f(x::AbstractVector{T},g::RationalFun{Fun{S,T,V1}}) where {S,T<:Real,V1}
     x,g(x)
 end
 
 
-@recipe function f{S1<:PiecewiseSpace,T1<:Real,S2<:PiecewiseSpace,T2<:Real,V1,V2}(r::RationalFun{Fun{S1,T1,V1},
-                                  Fun{S2,T2,V2}})
+@recipe function f(r::RationalFun{Fun{S1,T1,V1},
+                                  Fun{S2,T2,V2}}) where {S1<:PiecewiseSpace,T1<:Real,S2<:PiecewiseSpace,T2<:Real,V1,V2}
     vp = components(r.p)
     vq = components(r.q)
 
@@ -115,8 +113,8 @@ end
 end
 
 # For dirac space, we draw a dotted line extending to infinity
-@recipe function f{S1<:DiracSpace,T1<:Real,S2<:PointSpace,T2<:Real,V1,V2}(r::RationalFun{Fun{S1,T1,V1},
-                                  Fun{S2,T2,V2}})
+@recipe function f(r::RationalFun{Fun{S1,T1,V1},
+                                  Fun{S2,T2,V2}}) where {S1<:DiracSpace,T1<:Real,S2<:PointSpace,T2<:Real,V1,V2}
     p = r.p
     q = r.q
     pts=space(p).points
@@ -142,8 +140,8 @@ end
 end
 
 # for PointSpace, we draw just a line
-@recipe function f{S1<:PointSpace,T1<:Real,S2<:PointSpace,T2<:Real,V1,V2}(r::RationalFun{Fun{S1,T1,V1},
-                                  Fun{S2,T2,V2}})
+@recipe function f(r::RationalFun{Fun{S1,T1,V1},
+                                  Fun{S2,T2,V2}}) where {S1<:PointSpace,T1<:Real,S2<:PointSpace,T2<:Real,V1,V2}
     p = r.p
     q = r.q
     pts=space(p).points

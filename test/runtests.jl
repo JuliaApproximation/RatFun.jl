@@ -1,4 +1,4 @@
-using ApproxFun, RatFun, Base.Test
+using ApproxFun, RatFun, Test
 
 
 x = Fun()
